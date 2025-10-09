@@ -1,0 +1,20 @@
+---
+- name: "APT: Install required packages"
+  ansible.builtin.apt:
+    pkg:
+      - "ceph-common"
+      - "libcephfs2"
+      - "nfs-ganesha"
+      - "nfs-ganesha-ceph"
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: "DNF: Install required packages"
+  ansible.builtin.dnf:
+    name:
+      - "ceph-common"
+      - "libcephfs2"
+      - "nfs-ganesha"
+      - "nfs-ganesha-ceph"
+    state: present
+  when: ansible_os_family == 'RedHat'
