@@ -75,12 +75,6 @@
     enabled: true
     state: started
 
-### Do user home syncing here
-# * Mount as cephfs
-#
-# * Enumerate users
-#```
-#     kinit -k -t /etc/krb5.keytab
-#     ldapsearch "(objectClass=posixAccount)" uid 2>&1 | grep uid: | awk '{ print $2 };' | sort | uniq
-#```
-# * Make dirs with skel for missing homes
+- name: "CephFS homes"
+  include_tasks: "nfshomes.yml"
+  when: nfscephfs_homes is defined

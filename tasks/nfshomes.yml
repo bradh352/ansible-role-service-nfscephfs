@@ -1,0 +1,42 @@
+---
+- name: "Create mountpoint for cephfs homes"
+  file:
+    path: /mnt/cephfs
+    owner: root
+    mode: "0700"
+    state: directory
+
+- name: "Update fstab with homes"
+  lineinfile:
+    path: /etc/fstab
+    regexp: ".* /mnt/cephfs .*"
+    line: "{{ nfscephfs_mons|join(',') }}:/{{ nfscephfs_cephfs_subdirectory }} /mnt/cephfs    ceph    name={{ nfscephfs_cephfs_username }},secret={{ nfscephfs_cephfs_key }},rw,noatime,_netdev    0    0"
+  register: fstab
+
+- name: "Mount"
+  when: register.changed
+  shell: "mount -a"
+
+- name: "Create base home directory path"
+  file:
+    path: /mnt/cephfs/{{ nfscephfs_homes }}
+    owner: root
+    mode: "0755"
+    state: directory
+
+- name: "Install script to generate home directories"
+  templates:
+    src: createhomes.sh
+    dest: /usr/local/bin/createhomes.sh
+    mode: "755"
+    owner: "root"
+  vars:
+    mountpoint: "/mnt/cephfs/{{ nfscephfs_homes }}"
+
+- name: "Add cron task"
+  template:
+    src: createhomes.cron
+    dest: /etc/cron.d/createhomes
+    owner: root
+    mode: 0644
+

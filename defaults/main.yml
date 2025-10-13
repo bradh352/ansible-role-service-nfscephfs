@@ -1,2 +1,3 @@
 ---
 nfscephfs_hostname: "{{ inventory_hostname }}"
+nfscephfs_cron: "15 * * * *"

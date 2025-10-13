@@ -31,6 +31,10 @@ Backend data.
   specified subdirectory in the cephfs tree to use for user homes.  It also sets
   up an automated home creation script that will pre-create home directories for
   new users belonging to the `ipausers` group.
+- `nfscephfs_cron`: The cron schedule to run the create homes script when
+  `nfscephfs_homes` is defined.  Defaults to `15 * * * *`.  Should be different
+  for each server to prevent parallel execution.
+
 - `nfscephfs_hostname`: Optional.  If not specified, will use `inventory_hostname`.
   Used to generate a host+service keytab when clients are connecting to a virtual
   ip or load balancer.
