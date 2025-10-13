@@ -1,0 +1,20 @@
+# CentOS-Ceph-Squid.repo
+#
+# Please see https://wiki.centos.org/SpecialInterestGroup/Storage for more
+# information
+
+[centos-ceph-squid]
+name=CentOS-$stream - Ceph Squid
+#metalink=https://mirrors.centos.org/metalink?repo=centos-storage-sig-ceph-squid-10-stream&arch=$basearch
+baseurl=http://mirror.mirror.us-west-1.nexthop.ai/centos-$stream-sig-storage/$basearch/ceph-squid/
+gpgcheck=0
+enabled=1
+gpgkey=http://mirror.mirror.us-west-1.nexthop.ai/keys/RPM-GPG-KEY-CentOS-SIG-Storage
+
+[centos-ceph-squid-source]
+name=CentOS-$stream - Ceph Squid Source
+#baseurl=https://buildlogs.centos.org/centos/$stream/storage/$basearch/ceph-squid/
+baseurl=http://mirror.mirror.us-west-1.nexthop.ai/centos-$stream-sig-storage/source/ceph-squid/
+gpgcheck=0
+enabled=0
+gpgkey=http://mirror.mirror.us-west-1.nexthop.ai/keys/RPM-GPG-KEY-CentOS-SIG-Storage

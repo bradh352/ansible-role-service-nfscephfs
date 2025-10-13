@@ -1,0 +1,18 @@
+# CentOS-Nfsganesha-7.repo
+#
+# Please see https://wiki.centos.org/SpecialInterestGroup/Storage for more
+# information
+
+[centos-nfsganesha-7]
+name=CentOS-$stream - NFS Ganesha 7
+baseurl=http://mirror.mirror.us-west-1.nexthop.ai/centos-$stream-sig-storage/$basearch/nfsganesha-7/
+gpgcheck=0
+enabled=1
+gpgkey=http://mirror.mirror.us-west-1.nexthop.ai/keys/RPM-GPG-KEY-CentOS-SIG-Storage
+
+[centos-nfsganesha-7-source]
+name=CentOS-$stream - NFS Ganesha 7 Source
+baseurl=http://mirror.mirror.us-west-1.nexthop.ai/centos-$stream-sig-storage/source/nfsganesha-7/
+gpgcheck=0
+enabled=0
+gpgkey=http://mirror.mirror.us-west-1.nexthop.ai/keys/RPM-GPG-KEY-CentOS-SIG-Storage

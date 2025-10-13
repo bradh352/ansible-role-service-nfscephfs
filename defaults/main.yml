@@ -1,0 +1,2 @@
+---
+nfscephfs_hostname: "{{ inventory_hostname }}"

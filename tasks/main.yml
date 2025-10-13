@@ -9,6 +9,17 @@
     state: present
   when: ansible_os_family == 'Debian'
 
+- name: "DNF: Install Repo Files"
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/yum.repos.d/{{ item }}"
+    mode: "644"
+    owner: "root"
+  with_items:
+    - "Centos-Ceph-Squid.repo"
+    - "Centos-Nfsganesha-7.repo"
+  when: ansible_os_family == 'RedHat'
+
 - name: "DNF: Install required packages"
   ansible.builtin.dnf:
     name:
@@ -18,3 +29,58 @@
       - "nfs-ganesha-ceph"
     state: present
   when: ansible_os_family == 'RedHat'
+
+- name: "Install client keyring"
+  template:
+    src: ceph.client.user.keyring.j2
+    dest: "/etc/ceph/ceph.client.{{ nfscephfs_cephfs_username }}.keyring"
+    mode: "0600"
+    owner: root
+
+- name: "Install ceph.conf"
+  template:
+    src: ceph.conf.j2
+    dest: "/etc/ceph/ceph.conf"
+    mode: "0600"
+    owner: root
+
+- name: "UFW: Allow NFSv4 traffic"
+  community.general.ufw:
+    rule: allow
+    port: 2049
+    proto: tcp
+  when: ansible_os_family == 'Debian'
+
+- name: "FirewallD: Allow NFSv4 traffic"
+  firewalld:
+    immediate: yes
+    permanent: yes
+    port: "2049/tcp"
+    state: enabled
+  when: ansible_os_family == 'RedHat'
+
+- name: "Install ganesha.conf"
+  template:
+    src: ganesha.conf.j2
+    dest: "/etc/ganesha/ganesha.conf"
+    mode: "0600"
+    owner: root
+  notify: restart_ganesha
+
+### Create NFS keytab here
+
+- name: "Ensure Ganesha is enabled and started"
+  service:
+    name: nfs-ganesha
+    enabled: true
+    state: started
+
+### Do user home syncing here
+# * Mount as cephfs
+#
+# * Enumerate users
+#```
+#     kinit -k -t /etc/krb5.keytab
+#     ldapsearch "(objectClass=posixAccount)" uid 2>&1 | grep uid: | awk '{ print $2 };' | sort | uniq
+#```
+# * Make dirs with skel for missing homes

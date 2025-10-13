@@ -1,0 +1,5 @@
+[client.{{ nfscephfs_cephfs_username }}]
+	key = {{ nfscephfs_cephfs_key }}
+	caps mds = "allow rw fsname={{ nfscephfs_cephfs_name }} path=/{{ nfscephfs_cephfs_subdirectory }}"
+	caps mon = "allow r"
+	caps osd = "allow rw pool={{ nfscephfs_rbd_pool }}, allow rw tag cephfs data={{ nfscephfs_cephfs_name }}"
