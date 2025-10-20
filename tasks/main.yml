@@ -67,7 +67,9 @@
     owner: root
   notify: restart_ganesha
 
-### Create NFS keytab here
+- name: "Perform keytab tasks"
+  include_tasks: "keytab.yml"
+  throttle: 1
 
 - name: "Ensure Ganesha is enabled and started"
   service:

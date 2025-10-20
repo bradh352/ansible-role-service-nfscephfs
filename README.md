@@ -34,10 +34,15 @@ Backend data.
 - `nfscephfs_cron`: The cron schedule to run the create homes script when
   `nfscephfs_homes` is defined.  Defaults to `15 * * * *`.  Should be different
   for each server to prevent parallel execution.
-
 - `nfscephfs_hostname`: Optional.  If not specified, will use `inventory_hostname`.
   Used to generate a host+service keytab when clients are connecting to a virtual
   ip or load balancer.
+- `nfscephfs_sig_mirror`: Used for on RedHat-based distros.  The base mirror
+  location for the SIG (Special Interest Groups).  Defaults to
+  `https://mirror.stream.centos.org/SIGs/`
+- `nfscephfs_sig_keys`: Used for RedHat-based distros.  The base directory for
+  SIG signing keys.  Defaults to `https://www.dev.centos.org/keys/`
+
 
 ## Ansible Groups used by this role
 - `freeipa_servers`.  Will log into the server to:

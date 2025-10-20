@@ -1,3 +1,5 @@
 ---
 nfscephfs_hostname: "{{ inventory_hostname }}"
 nfscephfs_cron: "15 * * * *"
+nfscephfs_sig_mirror: "https://mirror.stream.centos.org/SIGs/"
+nfscephfs_sig_keys: "https://www.dev.centos.org/keys/"

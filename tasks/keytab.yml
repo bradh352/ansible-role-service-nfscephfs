@@ -1,0 +1,73 @@
+---
+- name: "Determine if nfs keytab for host exists"
+  shell: "klist -k /etc/krb5.keytab | grep nfs/{{ inventory_hostname }}"
+  register: nfs_host_keytab
+  failed_when: false
+  changed_when: nfs_host_keytab.rc != 0
+
+- name: "Generate NFS service for host"
+  delegate_to: "{{ nfscephfs_primary_freeipa }}"
+  when: nfs_host_keytab.changed
+  block:
+    - name: "Kinit"
+      shell: kinit -k -t /etc/krb5.svc_admin.keytab svc_admin
+      changed_when: false
+    - name: "See if service already exists"
+      shell: "ipa service-show nfs/{{ inventory_hostname }}"
+      register: nfs_host_exists
+      failed_when: false
+      changed_when: nfs_host_exists != 0
+    - name: "Generate service"
+      shell: "ipa service-add nfs/{{ inventory_hostname }}"
+      when: nfs_host_exists.changed
+
+- name: "Pull down service keytab for host"
+  when: nfs_host_keytab.changed
+  shell: "ipa-getkeytab -p nfs/{{ inventory_hostname }} -k /etc/krb5.keytab"
+
+- name: "Determine if nfs keytab for vip exists"
+  shell: "klist -k /etc/krb5.keytab | grep nfs/{{ nfscephfs_hostname }}"
+  register: nfs_vip_keytab
+  failed_when: false
+  changed_when: nfs_vip_keytab.rc != 0
+  when: nfscephfs_hostname is defined
+
+- name: "Generate NFS service keytab for vip"
+  delegate_to: "{{ nfscephfs_primary_freeipa }}"
+  when: nfscephfs_hostname is defined and nfs_vip_keytab.changed
+  block:
+    - name: "Kinit"
+      shell: kinit -k -t /etc/krb5.svc_admin.keytab svc_admin
+      changed_when: false
+    - name: "See if vip host exists"
+      shell: "ipa host-show {{ nfscephfs_hostname }}"
+      register: vip_host_exists
+      failed_when: false
+      changed_when: vip_host_exists.rc != 0
+    - name: "Create vip host"
+      shell: "ipa host-add {{ nfscephfs_hostname }}"
+      when: vip_host_exists.changed
+    - name: "See if vip service exists"
+      shell: "ipa service-show nfs/{{ nfscephfs_hostname }}"
+      register: vip_service_exists
+      failed_when: false
+      changed_when: vip_service_exists.rc != 0
+    - name: "Create vip service"
+      shell: "ipa service-add nfs/{{ nfscephfs_hostname}}"
+      when: vip_service_exists.changed
+    - name: "Allow host retrieval"
+      shell: "ipa service-allow-retrieve-keytab nfs/{{ nfscephfs_hostname }} --hosts {{ inventory_hostname }}
+      changed_when: false
+      failed_when: false
+
+- name: "Pull down service keytab for host"
+  when: nfscephfs_hostname is defined and nfs_vip_keytab.changed
+  block:
+    - name: "Try to fetch as if it exists first"
+      shell: "ipa-getkeytab -r -p nfs/{{ nfscephfs_hostname }} -k /etc/krb5.keytab"
+      register: keytab_retrieve
+      failed_when: false
+      changed_when: true
+    - name: "Generate new keytab"
+      when: keytab_retrieve.rc != 0
+      shell: "ipa-getkeytab -p nfs/{{ nfscephfs_hostname }} -k /etc/krb5.keytab"
