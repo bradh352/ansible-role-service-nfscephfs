@@ -24,6 +24,7 @@ Backend data.
   be used to generate service entries, etc.  Tasks will be delegated to this
   node for privileged operations and expect `/etc/krb5.svc_admin.keytab` to
   exist for authentication.
+- `nfscephfs_domain`: Domain used for users.  This should match the realm (lowercase).
 - `nfscephfs_cephfs_username`: Username to authenticate as to cephfs
 - `nfscephfs_cephfs_key`: Key associated with username to authenticate as.
 - `nfscephfs_cephfs_subdirectory`: Subdirectory within cephfs to mount
@@ -35,6 +36,15 @@ Backend data.
   specified subdirectory in the cephfs tree to use for user homes.  It also sets
   up an automated home creation script that will pre-create home directories for
   new users belonging to the `ipausers` group.
+- `nfscephfs_homes_links`: Optional.  When `nfscephfs_homes` is set, this is
+  a list of symlinks that should exist within each home directory.  Since NFS
+  homes are going to be slower than the native storage, often users will
+  put a symlink in the home directory pointing to a private directory outside
+  of the home.  E.g.  `work` -> `/work/$USER`
+  - `src`: Source of symlink.  Will replace a found pattern of `{user}`, with
+    the username in question. e.g. `/work/{user}`
+  - `dest`: The path within the user's home for the destination of the symlink.
+    E.g. `work`.
 - `nfscephfs_homes_groupdn`: Required if `nfscephfs_homes` set.  This is the
   groupdn to use to search for members to create homes, e.g.
   `cn=ipausers,cn=groups,cn=accounts,dc=bradhouse,dc=dev`
@@ -49,7 +59,6 @@ Backend data.
   `https://mirror.stream.centos.org/SIGs/`
 - `nfscephfs_sig_keys`: Used for RedHat-based distros.  The base directory for
   SIG signing keys.  Defaults to `https://www.dev.centos.org/keys/`
-- `nfscephfs_domain`: Domain used for users.  This should match the realm (lowercase).
 
 
 ## Ansible Groups used by this role

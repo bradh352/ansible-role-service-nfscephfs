@@ -23,6 +23,13 @@ for user in $users ; do
 	if [ ! -d "${MOUNTPOINT}/${user}" ] ; then
 		install -d -o $user -g $user -m 700 ${MOUNTPOINT}/${user} || die "failed to create user $user home"
 	fi
+{% for link in nfscephfs_homes_links %}
+	if [ ! -L "${MOUNTPOINT}/${user}/{{ link.dest }}" ] ; then
+		src=$(echo "{{ link.src }}" | sed -e "s/{user}/${user}/g")
+		ln -sf "${src}" "${MOUNTPOINT}/${user}/{{ link.dest }}"
+		chown ${user}:${user} "${MOUNTPOINT}/${user}/{{ link.dest }}"
+	fi
+{% endfor %}
 done
 
 exit 0
