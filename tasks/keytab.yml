@@ -8,6 +8,7 @@
 - name: "Generate NFS service for host"
   delegate_to: "{{ nfscephfs_primary_freeipa }}"
   when: nfs_host_keytab.changed
+  throttle: 1
   block:
     - name: "Kinit"
       shell: kinit -k -t /etc/krb5.svc_admin.keytab svc_admin
@@ -16,14 +17,18 @@
       shell: "ipa service-show nfs/{{ inventory_hostname }}"
       register: nfs_host_exists
       failed_when: false
-      changed_when: nfs_host_exists != 0
+      changed_when: nfs_host_exists.rc != 0
     - name: "Generate service"
       shell: "ipa service-add nfs/{{ inventory_hostname }}"
       when: nfs_host_exists.changed
 
 - name: "Pull down service keytab for host"
   when: nfs_host_keytab.changed
-  shell: "ipa-getkeytab -p nfs/{{ inventory_hostname }} -k /etc/krb5.keytab"
+  block:
+    - name: "Initialize host ticket"
+      shell: "kinit -k -t /etc/krb5.keytab host/{{ inventory_hostname }}"
+    - name: "fetch"
+      shell: "ipa-getkeytab -p nfs/{{ inventory_hostname }} -k /etc/krb5.keytab"
 
 - name: "Determine if nfs keytab for vip exists"
   shell: "klist -k /etc/krb5.keytab | grep nfs/{{ nfscephfs_hostname }}"
@@ -35,6 +40,7 @@
 - name: "Generate NFS service keytab for vip"
   delegate_to: "{{ nfscephfs_primary_freeipa }}"
   when: nfscephfs_hostname is defined and nfs_vip_keytab.changed
+  run_once: true
   block:
     - name: "Kinit"
       shell: kinit -k -t /etc/krb5.svc_admin.keytab svc_admin
@@ -55,19 +61,68 @@
     - name: "Create vip service"
       shell: "ipa service-add nfs/{{ nfscephfs_hostname}}"
       when: vip_service_exists.changed
-    - name: "Allow host retrieval"
-      shell: "ipa service-allow-retrieve-keytab nfs/{{ nfscephfs_hostname }} --hosts {{ inventory_hostname }}
-      changed_when: false
-      failed_when: false
 
-- name: "Pull down service keytab for host"
+- name: "Allow host retrieval"
+  throttle: 1
+  delegate_to: "{{ nfscephfs_primary_freeipa }}"
   when: nfscephfs_hostname is defined and nfs_vip_keytab.changed
+  shell: "ipa service-allow-retrieve-keytab nfs/{{ nfscephfs_hostname }} --hosts {{ inventory_hostname }}"
+  changed_when: false
+  failed_when: false
+
+
+# For some reason allowing it in the above command didn't work.  We need to
+# pull it from the remote.
+- name: "Pull down service keytab for host"
+  delegate_to: "{{ nfscephfs_primary_freeipa }}"
+  when: nfscephfs_hostname is defined and nfs_vip_keytab.changed
+  run_once: true
   block:
+    - name: "Kinit"
+      shell: kinit -k -t /etc/krb5.svc_admin.keytab svc_admin
     - name: "Try to fetch as if it exists first"
-      shell: "ipa-getkeytab -r -p nfs/{{ nfscephfs_hostname }} -k /etc/krb5.keytab"
+      shell: "ipa-getkeytab -r -p nfs/{{ nfscephfs_hostname }} -k /tmp/nfs.{{ nfscephfs_hostname }}.keytab"
       register: keytab_retrieve
       failed_when: false
       changed_when: true
     - name: "Generate new keytab"
       when: keytab_retrieve.rc != 0
-      shell: "ipa-getkeytab -p nfs/{{ nfscephfs_hostname }} -k /etc/krb5.keytab"
+      shell: "ipa-getkeytab -p nfs/{{ nfscephfs_hostname }} -k /tmp/nfs.{{ nfscephfs_hostname }}.keytab"
+    - name: "Download"
+      slurp:
+        src: "/tmp/nfs.{{ nfscephfs_hostname }}.keytab"
+      register: vip_keytab
+    - name: "cleanup"
+      file:
+        path: "/tmp/nfs.{{ nfscephfs_hostname }}.keytab"
+        state: absent
+
+- name: "Merge keytabs"
+  when: nfscephfs_hostname is defined and nfs_vip_keytab.changed
+  block:
+    - name: "Write /tmp/nfs.{{ nfscephfs_hostname }}.keytab"
+      copy:
+        dest: "/tmp/nfs.{{ nfscephfs_hostname }}.keytab"
+        content: "{{ vip_keytab.content | b64decode }}"
+    - name: "Move original keytab"
+      shell: "mv /etc/krb5.keytab /tmp/krb5.keytab"
+    - name: "Merge"
+      command: ktutil
+      args:
+        stdin: |
+          read_kt /tmp/krb5.keytab
+          read_kt /tmp/nfs.{{ nfscephfs_hostname }}.keytab
+          write_kt /etc/krb5.keytab
+          quit
+    - name:
+      file:
+        path: "/etc/krb5.keytab"
+        mode: "0600"
+        owner: "root"
+    - name: "cleanup"
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "/tmp/krb5.keytab"
+        - "/tmp/nfs.{{ nfscephfs_hostname }}.keytab"

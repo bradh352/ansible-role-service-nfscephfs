@@ -14,7 +14,7 @@
   register: fstab
 
 - name: "Mount"
-  when: register.changed
+  when: fstab.changed
   shell: "mount -a"
 
 - name: "Create base home directory path"
@@ -25,7 +25,7 @@
     state: directory
 
 - name: "Install script to generate home directories"
-  templates:
+  template:
     src: createhomes.sh
     dest: /usr/local/bin/createhomes.sh
     mode: "755"

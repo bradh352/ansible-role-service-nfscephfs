@@ -25,6 +25,7 @@
     name:
       - "ceph-common"
       - "libcephfs2"
+      - "libntirpc"
       - "nfs-ganesha"
       - "nfs-ganesha-ceph"
     state: present
@@ -69,7 +70,6 @@
 
 - name: "Perform keytab tasks"
   include_tasks: "keytab.yml"
-  throttle: 1
 
 - name: "Ensure Ganesha is enabled and started"
   service:

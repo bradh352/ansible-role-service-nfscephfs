@@ -20,6 +20,10 @@ Backend data.
 
 ## Variables
 
+- `nfscephfs_primary_freeipa`: Ansible hostname of primary freeipa node that can
+  be used to generate service entries, etc.  Tasks will be delegated to this
+  node for privileged operations and expect `/etc/krb5.svc_admin.keytab` to
+  exist for authentication.
 - `nfscephfs_cephfs_username`: Username to authenticate as to cephfs
 - `nfscephfs_cephfs_key`: Key associated with username to authenticate as.
 - `nfscephfs_cephfs_subdirectory`: Subdirectory within cephfs to mount
@@ -31,6 +35,9 @@ Backend data.
   specified subdirectory in the cephfs tree to use for user homes.  It also sets
   up an automated home creation script that will pre-create home directories for
   new users belonging to the `ipausers` group.
+- `nfscephfs_homes_groupdn`: Required if `nfscephfs_homes` set.  This is the
+  groupdn to use to search for members to create homes, e.g.
+  `cn=ipausers,cn=groups,cn=accounts,dc=bradhouse,dc=dev`
 - `nfscephfs_cron`: The cron schedule to run the create homes script when
   `nfscephfs_homes` is defined.  Defaults to `15 * * * *`.  Should be different
   for each server to prevent parallel execution.

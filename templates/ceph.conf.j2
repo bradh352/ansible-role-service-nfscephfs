@@ -3,6 +3,6 @@
 {% set mons=[] %}
 {% for mon in nfscephfs_mons %}
 {%   do mons.append("[v2:" ~ mon ~ ":3300/0,v1:" ~ mon ~ ":6789/0]") %}
-{% done %}
+{% endfor %}
   mon_host = {{ mons | join(" ") }}
 

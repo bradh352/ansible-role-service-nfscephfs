@@ -5,14 +5,14 @@
 
 [centos-ceph-squid]
 name=CentOS-$stream - Ceph Squid
-baseurl={{ nfscephfs_sig_mirror }}/$stream-stream/storage/$basearch/ceph-squid/
+baseurl={{ nfscephfs_sig_mirror }}/$stream/storage/$basearch/ceph-squid/
 gpgcheck=1
 enabled=1
 gpgkey={{ nfscephfs_sig_keys }}/RPM-GPG-KEY-CentOS-SIG-Storage
 
 [centos-ceph-squid-source]
 name=CentOS-$stream - Ceph Squid Source
-baseurl={{ nfscephfs_sig_mirror }}/$stream-stream/storage/source/ceph-squid/
+baseurl={{ nfscephfs_sig_mirror }}/$stream/storage/source/ceph-squid/
 gpgcheck=0
 enabled=0
 gpgkey={{ nfscephfs_sig_keys }}/RPM-GPG-KEY-CentOS-SIG-Storage

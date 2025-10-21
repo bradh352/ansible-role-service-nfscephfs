@@ -5,14 +5,14 @@
 
 [centos-nfsganesha-7]
 name=CentOS-$stream - NFS Ganesha 7
-baseurl={{ nfscephfs_sig_mirror }}/$stream-stream/storage/$basearch/nfsganesha-7/
+baseurl={{ nfscephfs_sig_mirror }}/$stream/storage/$basearch/nfsganesha-7/
 gpgcheck=1
 enabled=1
 gpgkey={{ nfscephfs_sig_keys }}/RPM-GPG-KEY-CentOS-SIG-Storage
 
 [centos-nfsganesha-7-source]
 name=CentOS-$stream - NFS Ganesha 7 Source
-baseurl={{ nfscephfs_sig_mirror }}/$stream-stream/storage/source/nfsganesha-7/
+baseurl={{ nfscephfs_sig_mirror }}/$stream/storage/source/nfsganesha-7/
 gpgcheck=0
 enabled=0
 gpgkey={{ nfscephfs_sig_keys }}/RPM-GPG-KEY-CentOS-SIG-Storage
