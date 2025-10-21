@@ -49,6 +49,7 @@ Backend data.
   `https://mirror.stream.centos.org/SIGs/`
 - `nfscephfs_sig_keys`: Used for RedHat-based distros.  The base directory for
   SIG signing keys.  Defaults to `https://www.dev.centos.org/keys/`
+- `nfscephfs_domain`: Domain used for users.  This should match the realm (lowercase).
 
 
 ## Ansible Groups used by this role

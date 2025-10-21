@@ -60,6 +60,13 @@
     state: enabled
   when: ansible_os_family == 'RedHat'
 
+- name: "Set idmap domain"
+  community.general.ini_file:
+    path: /etc/idmapd.conf
+    section: "General"
+    option: "Domain"
+    value: "{{ nfscephfs_domain }}"
+
 - name: "Install ganesha.conf"
   template:
     src: ganesha.conf.j2
