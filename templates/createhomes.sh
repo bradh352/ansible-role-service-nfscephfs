@@ -27,7 +27,6 @@ for user in $users ; do
 	if [ ! -L "${MOUNTPOINT}/${user}/{{ link.dest }}" ] ; then
 		src=$(echo "{{ link.src }}" | sed -e "s/{user}/${user}/g")
 		ln -sf "${src}" "${MOUNTPOINT}/${user}/{{ link.dest }}"
-		chown ${user}:${user} "${MOUNTPOINT}/${user}/{{ link.dest }}"
 	fi
 {% endfor %}
 done
