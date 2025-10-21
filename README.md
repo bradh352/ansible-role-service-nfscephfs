@@ -66,6 +66,7 @@ Backend data.
 mkdir -p /mnt/cephfs
 mount -t ceph admin@.{{ nfscephfs_cephfs_name }}=/ /mnt/cephfs
 mkdir /mnt/cephfs/{{ nfscephfs_cephfs_subdirectory }}
+chmod 777 /mnt/cephfs/{{ nfscephfs_cephfs_subdirectory }}
 umount /mnt/cephfs
 ```
   * replace `{{ nfscephfs_cephfs_name }}` and `{{ nfscephfs_cephfs_subdirectory }}` as appropriate

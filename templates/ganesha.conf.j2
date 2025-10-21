@@ -97,7 +97,7 @@ EXPORT
 	# The pseudoroot path. This is where the export will appear in the
 	# NFS pseudoroot namespace.
 	#
-	Pseudo = /;
+	Pseudo = {{ ("" if nfscephfs_cephfs_subdirectory.startswith("/") else "/") ~ nfscephfs_cephfs_subdirectory ~ ("" if nfscephfs_cephfs_subdirectory.endswith("/") else "/") }};
 
 	# We want to be able to read and write
 	Access_Type = RW;

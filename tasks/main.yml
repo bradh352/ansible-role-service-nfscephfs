@@ -68,6 +68,12 @@
     owner: root
   notify: restart_ganesha
 
+- name: "Make sure there is no ceph ganesha config"
+  file:
+    path: /etc/ganesha/ceph.conf
+    state: absent
+  notify: restart_ganesha
+
 - name: "Perform keytab tasks"
   include_tasks: "keytab.yml"
 
