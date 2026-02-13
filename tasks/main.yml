@@ -10,7 +10,7 @@
   when: ansible_os_family == 'Debian'
 
 - name: "DNF: Install Repo Files"
-  template:
+  ansible.builtin.template:
     src: "{{ item }}.j2"
     dest: "/etc/yum.repos.d/{{ item }}"
     mode: "644"
@@ -32,14 +32,14 @@
   when: ansible_os_family == 'RedHat'
 
 - name: "Install client keyring"
-  template:
+  ansible.builtin.template:
     src: ceph.client.user.keyring.j2
     dest: "/etc/ceph/ceph.client.{{ nfscephfs_cephfs_username }}.keyring"
     mode: "0600"
     owner: root
 
 - name: "Install ceph.conf"
-  template:
+  ansible.builtin.template:
     src: ceph.conf.j2
     dest: "/etc/ceph/ceph.conf"
     mode: "0600"
@@ -53,9 +53,9 @@
   when: ansible_os_family == 'Debian'
 
 - name: "FirewallD: Allow NFSv4 traffic"
-  firewalld:
-    immediate: yes
-    permanent: yes
+  ansible.posix.firewalld:
+    immediate: true
+    permanent: true
     port: "2049/tcp"
     state: enabled
   when: ansible_os_family == 'RedHat'
@@ -68,7 +68,7 @@
     value: "{{ nfscephfs_domain }}"
 
 - name: "Install ganesha.conf"
-  template:
+  ansible.builtin.template:
     src: ganesha.conf.j2
     dest: "/etc/ganesha/ganesha.conf"
     mode: "0600"
@@ -76,20 +76,19 @@
   notify: restart_ganesha
 
 - name: "Make sure there is no ceph ganesha config"
-  file:
+  ansible.builtin.file:
     path: /etc/ganesha/ceph.conf
     state: absent
   notify: restart_ganesha
 
 - name: "Perform keytab tasks"
-  include_tasks: "keytab.yml"
-
+  ansible.builtin.include_tasks: "keytab.yml"
 - name: "Ensure Ganesha is enabled and started"
-  service:
+  ansible.builtin.service:
     name: nfs-ganesha
     enabled: true
     state: started
 
 - name: "CephFS homes"
-  include_tasks: "nfshomes.yml"
+  ansible.builtin.include_tasks: "nfshomes.yml"
   when: nfscephfs_homes is defined

@@ -1,6 +1,5 @@
 ---
 - name: restart_ganesha
-  service:
+  ansible.builtin.service:
     name: nfs-ganesha
     state: restarted
-

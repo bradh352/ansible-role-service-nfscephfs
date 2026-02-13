@@ -1,6 +1,6 @@
 ---
 - name: "Determine if nfs keytab for host exists"
-  shell: "klist -k /etc/krb5.keytab | grep nfs/{{ inventory_hostname }}"
+  ansible.builtin.shell: "klist -k /etc/krb5.keytab | grep nfs/{{ inventory_hostname }}"
   register: nfs_host_keytab
   failed_when: false
   changed_when: nfs_host_keytab.rc != 0
@@ -11,27 +11,26 @@
   throttle: 1
   block:
     - name: "Kinit"
-      shell: kinit -k -t /etc/krb5.svc_admin.keytab svc_admin
+      ansible.builtin.command: kinit -k -t /etc/krb5.svc_admin.keytab svc_admin
       changed_when: false
     - name: "See if service already exists"
-      shell: "ipa service-show nfs/{{ inventory_hostname }}"
+      ansible.builtin.command: "ipa service-show nfs/{{ inventory_hostname }}"
       register: nfs_host_exists
       failed_when: false
       changed_when: nfs_host_exists.rc != 0
     - name: "Generate service"
-      shell: "ipa service-add nfs/{{ inventory_hostname }}"
+      ansible.builtin.command: "ipa service-add nfs/{{ inventory_hostname }}"
       when: nfs_host_exists.changed
 
 - name: "Pull down service keytab for host"
   when: nfs_host_keytab.changed
   block:
     - name: "Initialize host ticket"
-      shell: "kinit -k -t /etc/krb5.keytab host/{{ inventory_hostname }}"
+      ansible.builtin.command: "kinit -k -t /etc/krb5.keytab host/{{ inventory_hostname }}"
     - name: "fetch"
-      shell: "ipa-getkeytab -p nfs/{{ inventory_hostname }} -k /etc/krb5.keytab"
-
+      ansible.builtin.command: "ipa-getkeytab -p nfs/{{ inventory_hostname }} -k /etc/krb5.keytab"
 - name: "Determine if nfs keytab for vip exists"
-  shell: "klist -k /etc/krb5.keytab | grep nfs/{{ nfscephfs_hostname }}"
+  ansible.builtin.shell: "klist -k /etc/krb5.keytab | grep nfs/{{ nfscephfs_hostname }}"
   register: nfs_vip_keytab
   failed_when: false
   changed_when: nfs_vip_keytab.rc != 0
@@ -43,33 +42,32 @@
   run_once: true
   block:
     - name: "Kinit"
-      shell: kinit -k -t /etc/krb5.svc_admin.keytab svc_admin
+      ansible.builtin.command: kinit -k -t /etc/krb5.svc_admin.keytab svc_admin
       changed_when: false
     - name: "See if vip host exists"
-      shell: "ipa host-show {{ nfscephfs_hostname }}"
+      ansible.builtin.command: "ipa host-show {{ nfscephfs_hostname }}"
       register: vip_host_exists
       failed_when: false
       changed_when: vip_host_exists.rc != 0
     - name: "Create vip host"
-      shell: "ipa host-add {{ nfscephfs_hostname }}"
+      ansible.builtin.command: "ipa host-add {{ nfscephfs_hostname }}"
       when: vip_host_exists.changed
     - name: "See if vip service exists"
-      shell: "ipa service-show nfs/{{ nfscephfs_hostname }}"
+      ansible.builtin.command: "ipa service-show nfs/{{ nfscephfs_hostname }}"
       register: vip_service_exists
       failed_when: false
       changed_when: vip_service_exists.rc != 0
     - name: "Create vip service"
-      shell: "ipa service-add nfs/{{ nfscephfs_hostname}}"
+      ansible.builtin.command: "ipa service-add nfs/{{ nfscephfs_hostname}}"
       when: vip_service_exists.changed
 
 - name: "Allow host retrieval"
   throttle: 1
   delegate_to: "{{ nfscephfs_primary_freeipa }}"
   when: nfscephfs_hostname is defined and nfs_vip_keytab.changed
-  shell: "ipa service-allow-retrieve-keytab nfs/{{ nfscephfs_hostname }} --hosts {{ inventory_hostname }}"
+  ansible.builtin.command: "ipa service-allow-retrieve-keytab nfs/{{ nfscephfs_hostname }} --hosts {{ inventory_hostname }}"
   changed_when: false
   failed_when: false
-
 
 # For some reason allowing it in the above command didn't work.  We need to
 # pull it from the remote.
@@ -79,21 +77,21 @@
   run_once: true
   block:
     - name: "Kinit"
-      shell: kinit -k -t /etc/krb5.svc_admin.keytab svc_admin
+      ansible.builtin.command: kinit -k -t /etc/krb5.svc_admin.keytab svc_admin
     - name: "Try to fetch as if it exists first"
-      shell: "ipa-getkeytab -r -p nfs/{{ nfscephfs_hostname }} -k /tmp/nfs.{{ nfscephfs_hostname }}.keytab"
+      ansible.builtin.command: "ipa-getkeytab -r -p nfs/{{ nfscephfs_hostname }} -k /tmp/nfs.{{ nfscephfs_hostname }}.keytab"
       register: keytab_retrieve
       failed_when: false
       changed_when: true
     - name: "Generate new keytab"
       when: keytab_retrieve.rc != 0
-      shell: "ipa-getkeytab -p nfs/{{ nfscephfs_hostname }} -k /tmp/nfs.{{ nfscephfs_hostname }}.keytab"
+      ansible.builtin.command: "ipa-getkeytab -p nfs/{{ nfscephfs_hostname }} -k /tmp/nfs.{{ nfscephfs_hostname }}.keytab"
     - name: "Download"
-      slurp:
+      ansible.builtin.slurp:
         src: "/tmp/nfs.{{ nfscephfs_hostname }}.keytab"
       register: vip_keytab
     - name: "cleanup"
-      file:
+      ansible.builtin.file:
         path: "/tmp/nfs.{{ nfscephfs_hostname }}.keytab"
         state: absent
 
@@ -101,13 +99,13 @@
   when: nfscephfs_hostname is defined and nfs_vip_keytab.changed
   block:
     - name: "Write /tmp/nfs.{{ nfscephfs_hostname }}.keytab"
-      copy:
+      ansible.builtin.copy:
         dest: "/tmp/nfs.{{ nfscephfs_hostname }}.keytab"
         content: "{{ vip_keytab.content | b64decode }}"
     - name: "Move original keytab"
-      shell: "mv /etc/krb5.keytab /tmp/krb5.keytab"
+      ansible.builtin.command: "mv /etc/krb5.keytab /tmp/krb5.keytab"
     - name: "Merge"
-      command: ktutil
+      ansible.builtin.command: ktutil
       args:
         stdin: |
           read_kt /tmp/krb5.keytab
@@ -115,12 +113,12 @@
           write_kt /etc/krb5.keytab
           quit
     - name:
-      file:
+      ansible.builtin.file:
         path: "/etc/krb5.keytab"
         mode: "0600"
         owner: "root"
     - name: "cleanup"
-      file:
+      ansible.builtin.file:
         path: "{{ item }}"
         state: absent
       with_items:
