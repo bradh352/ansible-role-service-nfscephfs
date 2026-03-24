@@ -7,7 +7,7 @@
       - "nfs-ganesha"
       - "nfs-ganesha-ceph"
     state: present
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: "DNF: Install Repo Files"
   ansible.builtin.template:
@@ -18,7 +18,7 @@
   with_items:
     - "Centos-Ceph-Squid.repo"
     - "Centos-Nfsganesha-7.repo"
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "DNF: Install required packages"
   ansible.builtin.dnf:
@@ -29,7 +29,7 @@
       - "nfs-ganesha"
       - "nfs-ganesha-ceph"
     state: present
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "Install client keyring"
   ansible.builtin.template:
@@ -50,7 +50,7 @@
     rule: allow
     port: 2049
     proto: tcp
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: "FirewallD: Allow NFSv4 traffic"
   ansible.posix.firewalld:
@@ -58,7 +58,7 @@
     permanent: true
     port: "2049/tcp"
     state: enabled
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "Set idmap domain"
   community.general.ini_file:
