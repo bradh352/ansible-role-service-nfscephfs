@@ -83,6 +83,30 @@
 
 - name: "Perform keytab tasks"
   ansible.builtin.include_tasks: "keytab.yml"
+
+# Ganesha aborts on some libcephfs asserts and the stock unit never restarts it,
+# leaving keepalived's 2049 healthcheck failing on every node and the VIP down.
+- name: "Create nfs-ganesha systemd drop-in directory"
+  ansible.builtin.file:
+    path: /etc/systemd/system/nfs-ganesha.service.d
+    state: directory
+    mode: "0755"
+    owner: root
+
+- name: "Restart nfs-ganesha on failure"
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/nfs-ganesha.service.d/restart.conf
+    mode: "0644"
+    owner: root
+    content: |
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+  notify: reload_systemd
+
+- name: "Flush handlers so systemd picks up the drop-in"
+  ansible.builtin.meta: flush_handlers
+
 - name: "Ensure Ganesha is enabled and started"
   ansible.builtin.service:
     name: nfs-ganesha
